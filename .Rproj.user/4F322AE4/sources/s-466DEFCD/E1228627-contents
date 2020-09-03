@@ -135,9 +135,9 @@ UK_merged<- merge(uk_retailer, model_hp, by  = "CustomerID" , all.x=TRUE);
 
 analysis_data<- cbind(model_data,k_P6$cluster);
 
-write.csv(model_hp, "FirstTime_ClusterG.csv")
+write.csv(model_hp, "ClusteringData/FirstTime_ClusterG.csv")
 #write.csv(analysis_data, "Analysis_data.csv");
-write.csv(UK_merged, "UK_merged.csv");
+write.csv(UK_merged, "ClusteringData/UK_merged.csv");
 
 #install.packages("DMwR");
 library("DMwR");
