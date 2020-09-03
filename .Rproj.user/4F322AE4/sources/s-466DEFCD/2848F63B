@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1599157259318.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "2848F63B",
+    "lastKnownWriteTime" : 32370051824812143,
+    "last_content_update" : 1599157259318,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "646DDEBF",
+        "caption" : "model_hp",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=model_hp&cache_key=646DDEBF",
+        "displayedObservations" : "1549",
+        "environment" : "",
+        "object" : "model_hp",
+        "preview" : "0",
+        "totalObservations" : "1549",
+        "variables" : "35"
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

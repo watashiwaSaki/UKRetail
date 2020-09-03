@@ -1,0 +1,55 @@
+#Load cleaned and product categorized data
+uk_retailer <- read.csv("UK_retailer_cleaned_version2.csv", quote="")
+View(head(uk_retailer))
+
+unique(uk_retailer$Category)
+unique(nchar(uk_retailer$InvoiceNo))
+unique(uk_retailer$Country)
+
+#Consolidate product level data to customer level -- for performing clustering
+
+library(sqldf)
+modeldata<- sqldf("SELECT CustomerID, 
+Sum(Quantity*UnitPrice) as Spend, 
+Count(distinct InvoiceNo) as Bills, 
+Count(distinct substr(NewInvoiceDate,1,10)) as Visits,
+SUM(CASE WHEN UnitPrice!=0 then Quantity ELSE 0 end) as Qty,
+SUM(CASE WHEN UnitPrice=0 then Quantity ELSE 0 end) as FreeQty,
+MIN(substr(NewInvoiceDate,1,10)) as FPD,
+MAX(substr(NewInvoiceDate,1,10)) as LPD,
+Sum(Quantity*UnitPrice)/Count(distinct InvoiceNo) as ATV, 
+SUM(CASE WHEN UnitPrice!=0 then Quantity ELSE 0 end)/Count(distinct InvoiceNo) AS ABS,
+Sum(Quantity*UnitPrice)/SUM(CASE WHEN UnitPrice!=0 then Quantity ELSE 0 end) as APP,
+SUM(CASE WHEN Category='CUTLERY' THEN (Quantity*UnitPrice) ELSE 0 END )AS CUTLERY_spend,
+COUNT(DISTINCT(CASE WHEN (Category='CUTLERY' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS CUTLERy_bills,
+SUM(CASE WHEN Category='DECORATIVE LIGHTINGS' THEN (Quantity*UnitPrice) ELSE 0 END )AS DL_spend,
+COUNT(DISTINCT(CASE WHEN (Category='DECORATIVE LIGHTINGS' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS DL_bills,
+SUM(CASE WHEN Category='DAILY USE' THEN (Quantity*UnitPrice) ELSE 0 END )AS DAILYUSE_spend,
+COUNT(DISTINCT(CASE WHEN (Category='DAILY USE' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS DAILYUSE_bills,
+SUM(CASE WHEN Category='HOMEOFFICE DECORATIVE' THEN (Quantity*UnitPrice) ELSE 0 END )AS HOD_spend,
+COUNT(DISTINCT(CASE WHEN (Category='HOMEOFFICE DECORATIVE' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS HOD_bills,
+SUM(CASE WHEN Category='ACCESSORIES' THEN (Quantity*UnitPrice) ELSE 0 END )AS ACC_spend,
+COUNT(DISTINCT(CASE WHEN (Category='ACCESSORIES' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS ACC_bills,
+SUM(CASE WHEN Category='FURNITURE' THEN (Quantity*UnitPrice) ELSE 0 END )AS FURN_spend,
+COUNT(DISTINCT(CASE WHEN (Category='FURNITURE' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS FURN_bills,
+SUM(CASE WHEN Category='STATIONARY' THEN (Quantity*UnitPrice) ELSE 0 END )AS STATIONARY_spend,
+COUNT(DISTINCT(CASE WHEN (Category='STATIONARY' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS STATIONARY_bills,
+SUM(CASE WHEN Category='GAME' THEN (Quantity*UnitPrice) ELSE 0 END )AS Game_spend,
+COUNT(DISTINCT(CASE WHEN (Category='GAME' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS Game_bills,
+SUM(CASE WHEN Category='BATHROOM DECORATIVE' THEN (Quantity*UnitPrice) ELSE 0 END )AS BATH_spend,
+COUNT(DISTINCT(CASE WHEN (Category='BATHROOM DECORATIVE' and UnitPrice!=0) THEN InvoiceNo ELSE null END))AS BATH_bills,
+CASE WHEN Country='United Kingdom' then 1 else 0 end as UK_geo_purchaser
+FROM uk_retailer
+Group by 1
+")
+
+View(head(modeldata))
+write.csv(modeldata, "model_data.csv")
+
+
+
+
+
+
+
+

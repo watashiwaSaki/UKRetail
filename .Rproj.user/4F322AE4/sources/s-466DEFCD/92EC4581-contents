@@ -1,0 +1,145 @@
+#Choosing the modified model dataset
+model_hp <- read.csv("", quote="")
+raw_data <- read.csv("CampioneA1.csv", head=TRUE);
+rawwrite<- write.csv(raw_data, "CampioneA2.csv");
+table(raw_data$Date)
+head(raw_data)
+
+#Preprocess the dataset to select repeat purchasers and convert columns into numeric format of PCA
+library(dplyr)
+library(sqldf)
+colnames(model_hp)
+
+model_hp<- sqldf("select * FROM model_hp WHERE Visits>1")
+
+#considering both product  bill
+
+model_data<- sqldf("select Spend,Bills, Visits,Qty, FreeQty,Recency,Latency,ABS,ATV,
+                  CUTLERy_bills,DL_bills,DAILYUSE_bills,HOD_bills,ACC_bills,FURN_bills,
+                   STATIONARY_bills,Game_bills FROM model_hp WHERE Visits>1")
+
+model_data$Bills<- as.numeric(model_data$Bills)
+model_data$Visits<- as.numeric(model_data$Visits)
+model_data$Qty<- as.numeric(model_data$Qty)
+model_data$FreeQty<- as.numeric(model_data$FreeQty)
+model_data$Recency<- as.numeric(model_data$Recency)
+model_data$Latency<- as.numeric(model_data$Latency)
+model_data$ATV<- as.numeric(model_data$ATV)
+model_data$ABS<- as.numeric(model_data$ABS)
+model_data$CUTLERy_bills<- as.numeric(model_data$CUTLERy_bills)
+model_data$DL_bills<- as.numeric(model_data$DL_bills)
+model_data$DAILYUSE_bills<- as.numeric(model_data$DAILYUSE_bills)
+model_data$HOD_bills<- as.numeric(model_data$HOD_bills)
+model_data$ACC_bills<- as.numeric(model_data$ACC_bills)
+model_data$FURN_bills<- as.numeric(model_data$FURN_bills)
+model_data$STATIONARY_bills<- as.numeric(model_data$STATIONARY_bills)
+model_data$Game_bills<- as.numeric(model_data$Game_bills)
+
+
+#Scaling / Normalizing the data
+model_scale<- as.data.frame(scale(model_data))
+
+
+# Get principal component vectors
+pc <- prcomp(model_scale)
+plot(pc, type='l')
+summary(pc)
+pc
+plot(pc)
+comp <- data.frame(pc$x[,1:3])
+
+# Apply k-means with k=3 , 4, 5
+
+#k <- kmeans(model_scale,3, nstart=25, iter.max=1000)
+k <- kmeans(comp,3, nstart=25, iter.max=1000);
+table(k$cluster)
+#k1 <- kmeans(model_scale,4, nstart=25, iter.max=1000)
+k1 <- kmeans(comp,4, nstart=25, iter.max=1000);
+table(k1$cluster)
+#k2 <- kmeans(model_scale,5, nstart=25, iter.max=1000)
+k2 <- kmeans(comp,5, nstart=25, iter.max=1000);
+table(k2$cluster)
+
+
+k <- kmeans(model_scale,3, nstart=25, iter.max=1000)
+table(k$cluster)
+k1 <- kmeans(model_scale,4, nstart=25, iter.max=1000)
+table(k1$cluster)
+k2 <- kmeans(model_scale,5, nstart=25, iter.max=1000)
+table(k2$cluster)
+
+h<- hclust(dist(model_scale))
+plot(h)
+
+k$betweenss/k$totss*100 #46.2  56
+k1$betweenss/k1$totss*100 #57.6 70
+k2$betweenss/k2$totss*100 #62.4 76
+
+#Visuvalize clusters
+
+library(ggplot2)
+ggplot(as.data.frame(pc$x), aes(x=PC2, y=PC1, color=as.factor(k$cluster))) + 
+geom_point(size=3) + theme_bw() + xlab("PC2") + ylab("PC1");
+
+library(rgl)
+plot3d(pc$x, col=as.factor(k$cluster))
+
+
+# Determine the right number of clusters using WSS
+
+wss <- (nrow(model_scale)-1)*sum(apply(model_scale,2,var))
+
+for (i in 2:15) wss[i] <- sum(kmeans(model_scale,nstart=25,centers=i)$withinss)
+plot(1:15, wss, type="b", xlab="Number of Clusters",
+     ylab="Within groups sum of squares")
+
+
+# Determine the right number of clusters using silhouette coefficient
+library("cluster")
+kmax <- 15
+res <- rep(0,kmax)
+for(i in 2:kmax){
+  kmmtemp <- kmeans(model_scale,i,nstart=25)
+  resv <- silhouette(kmmtemp$cluster,dist(model_scale))
+  res[i] <- mean(resv[,3])
+}
+plot(1:kmax,res,type="l",pch=19,frame=FALSE,xlab="Number of clusters K",ylab="Silhouette coeficient")	
+
+
+
+#Copy the cluster to acheived for each customer to the original dataset
+model_hp<-cbind(model_hp,as.factor(k$cluster))
+UK_merged<- merge(uk_retailer, model_hp, by  = "CustomerID" , all.x=TRUE);
+
+analysis_data<- cbind(model_data,as.factor(k$cluster));
+
+write.csv(model_hp, "Repeaters_ClusterG.csv")
+write.csv(analysis_data, "Analysis_data.csv");
+write.csv(UK_merged, "UK_merged.csv");
+
+#install.packages("DMwR");
+library("DMwR");
+CentreK<- k$centers
+nComp=3
+nents = CentreK$x %*% t(CentreK$rotation)
+s<-unscale(k$centers, scale(model_data));
+s
+
+Csummary(analysis_data);
+C256<- model_hp[model_hp$`as.factor(k$cluster)`==1,];
+C7<- model_hp[model_hp$`as.factor(k$cluster)`==2,];
+C2527<- model_hp[model_hp$`as.factor(k$cluster)`==3,];
+
+cor(C256$Spend, C256$FreeQty);
+cor(C7$Spend, C7$FreeQty);
+cor(C2527$Spend, C2527$FreeQty);
+
+
+cor(C3$Spend, C3$Visits);
+cor(C3$Bills, C3$Visits);
+library("lubridate");
+by_cluster<-aggregate(model_hp, by=list(model_hp$`as.factor(k$cluster)`), FUN=mean);
+names(UK_merged);
+plot(analysis_data$ABS, col=as.factor(analysis_data$`as.factor(k$cluster)`))
+
+

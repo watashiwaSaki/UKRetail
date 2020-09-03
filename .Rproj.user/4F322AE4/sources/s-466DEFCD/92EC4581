@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1599152365335.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "92EC4581",
+    "lastKnownWriteTime" : 1568589211,
+    "last_content_update" : 1568589211,
+    "path" : "C:/Users/watas/Desktop/Polimi/DONE/Predictive Analytics/Carlotta/Repeaters cluster Version3.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "1,0",
+        "scrollLine" : "0"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
